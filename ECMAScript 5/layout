@@ -1,20 +1,20 @@
+for http://arborjs.org/halfviz/#
+
 http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf
-SourceCharacter :
-any Unicode code unit
 
-InputElementDiv :
-WhiteSpace
-LineTerminator
-Comment
-Token
-DivPunctuator
+SourceCharacter
 
-InputElementRegExp :
-WhiteSpace
-LineTerminator
-Comment
-Token
-RegularExpressionLiteral
+InputElementDiv -> WhiteSpace
+InputElementDiv -> LineTerminator
+InputElementDiv -> Comment
+InputElementDiv -> Token
+InputElementDiv -> DivPunctuator
+
+InputElementRegExp -> WhiteSpace
+InputElementRegExp -> LineTerminator
+InputElementRegExp -> Comment
+InputElementRegExp -> Token
+InputElementRegExp -> RegularExpressionLiteral
 
 WhiteSpace
 
@@ -22,43 +22,44 @@ LineTerminator
 
 LineTerminatorSequence
 
-Comment :
+Comment -> MultiLineComment
+Comment -> SingleLineComment
+
 MultiLineComment
+MultiLineComment -> /* SourceCharacter */
+
 SingleLineComment
+SingleLineComment -> // SingleLineCommentChars LineTerminator
 
-MultiLineComment :
-/* SourceCharacter */
+SingleLineCommentChars
+SingleLineCommentChars -> SourceCharacter SingleLineCommentCharsopt
 
-SingleLineComment :
-// SingleLineCommentChars LineTerminator
+Token
+Token -> IdentifierName
+Token -> Punctuator
+Token -> NumericLiteral
+Token -> StringLiteral
 
-SingleLineCommentChars :
-SourceCharacter (SingleLineCommentChars)
+Identifier
+Identifier -> IdentifierName but not ReservedWord
 
-Token :
 IdentifierName
-Punctuator
-NumericLiteral
-StringLiteral
+IdentifierName -> IdentifierStart
+IdentifierName -> IdentifierName IdentifierPart
 
-Identifier :
-IdentifierName but not ReservedWord
-
-IdentifierName :
 IdentifierStart
-IdentifierName IdentifierPart
-
-IdentifierStart :
-UnicodeLetter
-$
-_
-\ UnicodeEscapeSequence
+IdentifierStart -> UnicodeLetter
+IdentifierStart -> $
+IdentifierStart -> _
+IdentifierStart -> \ UnicodeEscapeSequence
 
 IdentifierPart :
 IdentifierStart
 UnicodeCombiningMark
 UnicodeDigit
 UnicodeConnectorPunctuation
+<ZWNJ>
+<ZWJ>
 
 UnicodeLetter
 
@@ -122,13 +123,13 @@ DecimalLiteral
 HexIntegerLiteral
 
 DecimalLiteral :
-DecimalIntegerLiteral . (DecimalDigits) (ExponentPart)
-. DecimalDigits (ExponentPart)
-DecimalIntegerLiteral (ExponentPart)
+DecimalIntegerLiteral . DecimalDigitsopt ExponentPartopt
+. DecimalDigits ExponentPartopt
+DecimalIntegerLiteral ExponentPartopt
 
 DecimalIntegerLiteral :
 0
-NonZeroDigit (DecimalDigits)
+NonZeroDigit DecimalDigitsopt
 
 DecimalDigits :
 DecimalDigit
@@ -160,11 +161,27 @@ HexDigit :
 0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F
 
 StringLiteral :
-" (StringCharacters) "
-' (StringCharacters) '
+" DoubleStringCharactersopt "
+' SingleStringCharactersopt '
 
-StringCharacters :
-SourceCharacter (StringCharacters)
+DoubleStringCharacters :
+DoubleStringCharacter DoubleStringCharactersopt
+
+SingleStringCharacters :
+SingleStringCharacter SingleStringCharactersopt
+
+DoubleStringCharacter :
+SourceCharacter but not one of " or \ or LineTerminator
+\ EscapeSequence
+LineContinuation
+
+SingleStringCharacter :
+SourceCharacter but not one of ' or \ or LineTerminator
+\ EscapeSequence
+LineContinuation
+
+LineContinuation :
+\ LineTerminatorSequence
 
 EscapeSequence :
 CharacterEscapeSequence
@@ -197,7 +214,6 @@ u HexDigit HexDigit HexDigit HexDigit
 RegularExpressionLiteral :
 / RegularExpressionBody / RegularExpressionFlags
 
-/*
 RegularExpressionBody :
 RegularExpressionFirstChar RegularExpressionChars
 
@@ -235,14 +251,13 @@ RegularExpressionBackslashSequence
 RegularExpressionFlags :
 [empty]
 RegularExpressionFlags IdentifierPart
-*/
 
 StringNumericLiteral :
-(StrWhiteSpace)
-(StrWhiteSpace) StrNumericLiteral (StrWhiteSpace)
+StrWhiteSpaceopt
+StrWhiteSpaceopt StrNumericLiteral StrWhiteSpaceopt
 
 StrWhiteSpace :
-StrWhiteSpaceChar (StrWhiteSpace)
+StrWhiteSpaceChar StrWhiteSpaceopt
 
 StrWhiteSpaceChar :
 WhiteSpace
@@ -259,9 +274,9 @@ StrUnsignedDecimalLiteral
 
 StrUnsignedDecimalLiteral :
 Infinity
-DecimalDigits . (DecimalDigits) (ExponentPart)
-. DecimalDigits (ExponentPart)
-DecimalDigits (ExponentPart)
+DecimalDigits . DecimalDigitsopt ExponentPartopt
+. DecimalDigits ExponentPartopt
+DecimalDigits ExponentPartopt
 
 DecimalDigits :
 DecimalDigit
@@ -298,13 +313,13 @@ ObjectLiteral
 ( Expression )
 
 ArrayLiteral :
-[ (Elision) ]
+[ Elisionopt ]
 [ ElementList ]
-[ ElementList , (Elision) ]
+[ ElementList , Elisionopt ]
 
 ElementList :
-(Elision) AssignmentExpression
-ElementList , (Elision) AssignmentExpression
+Elisionopt AssignmentExpression
+ElementList , Elisionopt AssignmentExpression
 
 Elision :
 ,
@@ -512,7 +527,7 @@ TryStatement
 DebuggerStatement
 
 Block :
-{ (StatementList) }
+{ StatementListopt }
 
 StatementList :
 Statement
@@ -530,10 +545,10 @@ VariableDeclarationNoIn
 VariableDeclarationListNoIn , VariableDeclarationNoIn
 
 VariableDeclaration :
-Identifier (Initialiser)
+Identifier Initialiseropt
 
 VariableDeclarationNoIn :
-Identifier (InitialiserNoIn)
+Identifier InitialiserNoInopt
 
 Initialiser :
 = AssignmentExpression
@@ -554,8 +569,8 @@ if ( Expression ) Statement
 IterationStatement :
 do Statement while ( Expression );
 while ( Expression ) Statement
-for ((ExpressionNoIn); (Expression) ; (Expression) ) Statement
-for ( var VariableDeclarationListNoIn; (Expression) ; (Expression) ) Statement
+for (ExpressionNoInopt; Expressionopt ; Expressionopt ) Statement
+for ( var VariableDeclarationListNoIn; Expressionopt ; Expressionopt ) Statement
 for ( LeftHandSideExpression in Expression ) Statement
 for ( var VariableDeclarationNoIn in Expression ) Statement
 
@@ -578,27 +593,27 @@ SwitchStatement :
 switch ( Expression ) CaseBlock
 
 CaseBlock :
-{ (CaseClauses) }
-{ (CaseClauses) DefaultClause (CaseClauses) }
+{ CaseClausesopt }
+{ CaseClausesopt DefaultClause CaseClausesopt }
 
 CaseClauses :
 CaseClause
 CaseClauses CaseClause
 
-CaseClause
+CaseClause :
 
-case Expression
+case Expression :
 
-DefaultClause
+DefaultClause :
 
-default
+default :
 
-LabelledStatement
+LabelledStatement :
 
-Identifier
+Identifier :
 
-ThrowStatement
-throw Expression ;
+ThrowStatement :
+throw [no LineTerminator here] Expression ;
 
 TryStatement :
 try Block Catch
@@ -615,20 +630,20 @@ DebuggerStatement :
 debugger ;
 
 FunctionDeclaration :
-function Identifier ( (FormalParameterList) ) { FunctionBody }
+function Identifier ( FormalParameterListopt ) { FunctionBody }
 
 FunctionExpression :
-function (Identifier) ( (FormalParameterList) ) { FunctionBody }
+function Identifieropt ( FormalParameterListopt ) { FunctionBody }
 
 FormalParameterList :
 Identifier
 FormalParameterList , Identifier
 
 FunctionBody :
-(SourceElements)
+SourceElementsopt
 
 Program :
-(SourceElements)
+SourceElementsopt
 
 SourceElements :
 SourceElement
@@ -639,10 +654,10 @@ Statement
 FunctionDeclaration
 
 uri :
-(uriCharacters)
+uriCharactersopt
 
 uriCharacters :
-uriCharacter (uriCharacters)
+uriCharacter uriCharactersopt
 
 uriCharacter :
 uriReserved
@@ -776,4 +791,3 @@ DecimalEscape
 b
 CharacterEscape
 CharacterClassEscape
-
