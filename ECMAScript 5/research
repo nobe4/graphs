@@ -1,4 +1,6 @@
 http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf
+https://www.flickr.com/photos/nicksieger/sets/72157594499591461
+
 SourceCharacter :
 any Unicode code unit
 
@@ -483,7 +485,8 @@ AssignmentExpressionNoIn :
 ConditionalExpressionNoIn
 LeftHandSideExpression = AssignmentExpressionNoIn
 LeftHandSideExpression AssignmentOperator AssignmentExpressionNoIn
-AssignmentOperator : one of See 11.13
+
+AssignmentOperator :
 *= /= %= += -= <<= >>= >>>= &= ^= |=
 
 Expression :
@@ -585,17 +588,15 @@ CaseClauses :
 CaseClause
 CaseClauses CaseClause
 
-CaseClause
+CaseClause :
+case Expression : (StatementList)
 
-case Expression
 
-DefaultClause
+DefaultClause :
+default : (StatementList)
 
-default
-
-LabelledStatement
-
-Identifier
+LabelledStatement: 
+Identifier : Statement
 
 ThrowStatement
 throw Expression ;
